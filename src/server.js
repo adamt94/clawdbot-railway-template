@@ -651,6 +651,11 @@ proxy.on("error", (err, _req, _res) => {
   console.error("[proxy]", err);
 });
 
+// Inject authentication token into all proxied requests
+proxy.on("proxyReq", (proxyReq, _req, _res) => {
+  proxyReq.setHeader("Authorization", `Bearer ${CLAWDBOT_GATEWAY_TOKEN}`);
+});
+
 app.use(async (req, res) => {
   // If not configured, force users to /setup for any non-setup routes.
   if (!isConfigured() && !req.path.startsWith("/setup")) {
@@ -691,6 +696,8 @@ server.on("upgrade", async (req, socket, head) => {
     socket.destroy();
     return;
   }
+  // Inject authentication token for WebSocket upgrade
+  req.headers.authorization = `Bearer ${CLAWDBOT_GATEWAY_TOKEN}`;
   proxy.ws(req, socket, head, { target: GATEWAY_TARGET });
 });
 
