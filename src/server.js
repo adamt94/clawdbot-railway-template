@@ -60,7 +60,19 @@ function clawArgs(args) {
 }
 
 function configPath() {
-  return process.env.CLAWDBOT_CONFIG_PATH?.trim() || path.join(STATE_DIR, "clawdbot.json");
+  // Check for explicit config path override first
+  const explicitPath = process.env.CLAWDBOT_CONFIG_PATH?.trim();
+  if (explicitPath) return explicitPath;
+
+  // Check for both new (moltbot.json) and legacy (clawdbot.json) config filenames.
+  // Prioritize moltbot.json since the CLI now writes to that after the Clawdbot → Moltbot rename.
+  const moltbotPath = path.join(STATE_DIR, "moltbot.json");
+  const clawdbotPath = path.join(STATE_DIR, "clawdbot.json");
+  
+  if (fs.existsSync(moltbotPath)) return moltbotPath;
+  
+  // Fall back to clawdbot.json for backward compatibility (if it exists) or as the default path
+  return clawdbotPath;
 }
 
 function isConfigured() {
